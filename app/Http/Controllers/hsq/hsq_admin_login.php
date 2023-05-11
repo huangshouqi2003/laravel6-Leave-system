@@ -20,6 +20,8 @@ class hsq_admin_login extends Controller
             'aud' => 'http://example.com',
             'exp' =>  time()+3600,
             'data' => [$request->input('stu_id'),
+            'admin',
+
             ],
             'iat' => time(),
             'nbf' => time()
@@ -37,11 +39,15 @@ class hsq_admin_login extends Controller
         $gg = hsq_admin_login_cc::hsq_denglus($request);
         if($gg=='0')//账号密码输入有误
         {
-            return response()->json(['data'=>'账号密码有误']);
+            return json_fail('账号密码有误', null, 100);
         }
-        $data=$gg->getData();
-        $data=$data->data;//取出查询的数据
-        $token=self::creat_token($request);//生成token
-        return response()->json(['data'=>$data,'token'=>$token],200);
+        else{
+            $data=$gg->getData();
+            $data=$data->data;//取出查询的数据
+            $token=self::creat_token($request);//生成token
+            return json_success('登录成功',$token,200);
+
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models\hsq;
 
+use App\Http\Controllers\Lsf\StuController;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Database\Eloquent\Model;
@@ -14,31 +15,22 @@ class hsq_student extends Model
     protected $fillable = ['stu_id','password'];
     public $timestamps = true;
 
-    public static  function hsq_denglus($request)
+    //查看账号密码是否相同
+    public static  function hsq_denglus($stu_id,$password)
     {
-        try
-        {
-            $stu_id=self::firstwhere('stu_id',$request->input('stu_id'));//查询账号
-        }
-        catch (\Exception $e)
-        {
+        try {
+            $stu_id=self::where('stu_id',$stu_id)->value('stu_id');//查询账号
+            $ress = self::where('stu_id',$stu_id)->value('password');
+
+            $re=StuController::decryptString($ress);
+            if ($re == $password){
+                return response()->json(['data'=>$stu_id],200);
+            }else{
+                return 0;
+            }
+        }catch (\Exception $e){
+            logError('错误');
             return 0;
-        }
-        if($stu_id['stu_id']==null)//都为空返回500
-        {
-            return 0;
-        }
-        else if($stu_id['identity'])
-        {
-            return response()->json(['data'=>$stu_id,'identity'=>'1'],200);
-        }
-        else if($stu_id['password']!=$request->input('password'))
-        {
-            return 0;
-        }
-        else
-        {
-            return response()->json(['data'=>$stu_id],200);
         }
 
     }

@@ -15,17 +15,34 @@ class wtSelStuController extends Controller
   */
 
     public function find_stu(SelBlogPost $request)   {
+        //获取JWT
+        $jwt = $request->header("authorization");
 
-        $res = wt_Sel::selBy_name($request['stu_name']);
-        if (strlen(($res))==2)   {
-            return response()->json(['data'=>'查询学生信息不存在！']);
-        }else{
-            return $res ?
-                json_success('学生信息查询成功!',$res,200):
-                json_fail('学生信息查询失败!',$res,100);
-//                response()->json(array('code' => 1, 'msg' => '学生信息查询成功', 'date' => $res), 200):
-//                response()->json(array('code' => 0, 'msg' => '学生信息查询失败', 'date' => $res), 100);
+        //验证token
+        $arr=AuthController::encode_token($jwt);
+        try {
+            $arr = $arr['data'];
+            if ($jwt!=null) {
+
+                $res = wt_Sel::selBy_name($request['stu_name']);
+                if (strlen(($res))==2)   {
+                    return response()->json(['data'=>'查询学生信息不存在！']);
+                }else{
+                    return $res ?
+                        json_success('学生信息查询成功!',$res,200):
+                        json_fail('学生信息查询失败!',$res,100);
+                    //                response()->json(array('code' => 1, 'msg' => '学生信息查询成功', 'date' => $res), 200):
+                    //                response()->json(array('code' => 0, 'msg' => '学生信息查询失败', 'date' => $res), 100);
+                }
+            }else   {
+                return json_success('token验证失败',$arr,200);
+            }
+        }catch (\Exception $e)   {
+            return json_success('token验证失败',$arr,200);
+
+
         }
+
 
     }
 

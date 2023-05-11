@@ -46,5 +46,18 @@ class Admin extends Model
             return false;
         }
     }
+    
+        //查询个人请假信息
+    public static function lsf_search($stu_name)
+    {
+        try {
+            $res = self::select('*')->where('stu_name','=',$stu_name)->orwhere('stu_id','=',$stu_name)->get();
+            return $res;
+        }catch (\Exception $e)  {
+            logError('查询审核状态失败',[$e->getMessage()]);
+            return false;
+        }
+    }
+
 
 }

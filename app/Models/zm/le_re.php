@@ -17,10 +17,12 @@ class le_re extends Model
     {
         try {
             $info1 = self::select('*')->where('le_state', '=', '审核中')->get();
-            $info2 = self::select('*')->where('le_state', '=', '未通过')->get();
+            $info2 = self::select('*')->where('le_state', '=', '不通过')->get();
             $info3 = self::select('*')->where('le_state', '=', '已通过')->get();
 
-            $info4=array($info1,$info2,$info3);
+//            array_push($info1,$info2,$info3);
+
+            $info4=[$info1,$info2,$info3];
             return $info4;
         } catch (\Exception $key) {
             logError('查询失败', [$key->getMessage()]);

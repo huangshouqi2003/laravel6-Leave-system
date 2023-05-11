@@ -23,11 +23,15 @@ class AdminController extends Controller
     {
         $token = $request->header('Authorization');
 
-        $request->headers->set('Authorization', $token);
+        if ($token === null){
+            return false;
+        } else{
+            $request->headers->set('Authorization', $token);
 
-        $res= self::lsf_refresh_token($token);
+            $res= self::lsf_refresh_token($token);
 
-        return $res;
+            return $res;
+        }
 
     }
 
@@ -55,8 +59,8 @@ class AdminController extends Controller
                 //未过期
                 $res=array('one'=>true,
                     'two' => 'ok',
-                    'three'=> 1,
-                    'four'=>2) ;
+                    'three'=>$stu_id,
+                    'four'=>$stu_name);
                 return $res;
             }else {
                 //过期\
@@ -68,8 +72,8 @@ class AdminController extends Controller
             }
 
         } catch (\Firebase\JWT\SignatureInvalidException $e) {  //签名不正确
-             logError($e->getMessage());
-             return false;
+            logError($e->getMessage());
+            return false;
         } catch (\Firebase\JWT\BeforeValidException $e) {  // 签名在某个时间点之后才能用
             logError($e->getMessage());
             return false;
@@ -95,35 +99,41 @@ class AdminController extends Controller
     //批改假条
     public static function lsf_correct(NoteRequest $request)
     {
-        $s=self::lsf_get_token($request);
-        $s1=$s['one'];//false
-        $s2=$s['two'];//out
-        $s3 = $s['three'];
-        $s4 = $s['four'];
-        if ($s1)
-        {
-            $id = $request['id'];
-            $le_state = $request['le_state'];
-            $res = Admin::lsf_find($id,$le_state);
-            if ($res == $le_state){
-                return json_fail('审核失败，此申请已审批',null,100);
-            }else{
-                $res = Admin::lsf_correct($id,$le_state);
-                return $res ?
-                    json_success('审核成功!',$res,'200'):
-                    json_fail('审核失败!查无此假条！',null,'100');
+        $s = self::lsf_get_token($request);
+
+        if ($s===false) {
+            return json_fail('token不存在', null, 100);
+        } else {
+            $s1 = $s['one'];//false
+            $s2 = $s['two'];//out
+            $s3 = $s['three'];
+            $s4 = $s['four'];
+            if ($s1) {
+                $id = $request['id'];
+                $le_state = $request['le_state'];
+                $res = Admin::lsf_find($id, $le_state);
+                if ($res == $le_state) {
+                    return json_fail('审核失败，此申请已审批', null, 100);
+                } else {
+                    $res = Admin::lsf_correct($id, $le_state);
+                    return $res ?
+                        json_success('审核成功!', $res, 200) :
+                        json_fail('审核失败!查无此假条！', null, 100);
+                }
+            } else if ($s2 == 'out') {
+                $new_token = self::lsf_flush_token($s3, $s4);
+                return json_fail('token已过期', $new_token, 100);
+            } else {
+                return json_fail('token不存在', null, 100);
             }
-        }else if ($s2=='out') {
-            $new_token = self::lsf_flush_token($s3,$s4);
-            return json_fail('token已过期',$new_token,100);
-        }else{
-            return json_fail('token不存在',null,100);
         }
     }
 
     //刷新token
-    public static function lsf_flush_token($stu_id,$stu_name)
+    public static function lsf_flush_token(Request $request)
     {
+        $stu_id=$request['stu_id'];
+        $stu_name = $request['stu_name'];
         $key = 'hsq';
         $payload = [
             "alg" => "HS256",
@@ -138,7 +148,7 @@ class AdminController extends Controller
             'nbf' => time()
         ];
         $token = JWT::encode($payload, $key, 'HS256');
-        return $token;
+        return json_success('asd',$token,200);
     }
 
     //发送验证码
@@ -156,8 +166,8 @@ class AdminController extends Controller
         $p = (new AdminController)->sendEmail($res,$co);
 
         return $p?
-            json_success('发送成功',$co,'200'):
-            json_fail('发送失败，邮箱有误或不存在',null,'100');
+            json_success('发送成功',$co,200):
+            json_fail('发送失败，邮箱有误或不存在',null,100);
     }
 
     //发送邮件
@@ -183,14 +193,54 @@ class AdminController extends Controller
     {
 
         $stu_id = $request['stu_id'];
-        $stu_new_password = $request['stu_new_password'];
+        $new_password = $request['stu_new_password'];
+
+
+        $stu_new_password = StuController::encryptString($new_password);
 
         $res = Stu_pwd::lsf_up_paw($stu_id,$stu_new_password);
 
         return $res?
-            json_success('修改成功',$res,'200'):
-            json_fail('修改失败，用户不存在',null,'100');
+            json_success('修改成功',$res,200):
+            json_fail('修改失败，用户不存在',null,100);
 
+    }
+
+    //查询个人请假信息
+    public static function lsf_search_le(Request $request)
+    {
+        $s = self::lsf_get_token($request);
+
+        if ($s===false) {
+            return json_fail('token不存在', null, 100);
+        } else {
+            $s1 = $s['one'];//false
+            $s2 = $s['two'];//out
+            $s3 = $s['three'];
+            $s4 = $s['four'];
+            if ($s1) {
+                $stu_name = $request['stu_name'];
+//                $le_state = $request['le_state'];
+                $res = Admin::lsf_search($stu_name);
+                if (strlen(($res))==2) {
+                    return json_success('查阅失败!查无此学生请假记录！', null, 100);
+                }else{
+                    return $res ?
+                        json_success('查阅成功!', $res, 200) :
+                        json_fail('查阅失败!查无此学生请假记录！', null, 100);
+                }
+
+                return $res ?
+                    json_success('查阅成功!', $res, 200) :
+                    json_fail('查阅失败!查无此学生请假记录！', null, 100);
+
+            } else if ($s2 == 'out') {
+                $new_token = self::lsf_flush_token($s3, $s4);
+                return json_fail('token已过期', $new_token, 100);
+            } else {
+                return json_fail('token不存在', null, 100);
+            }
+        }
     }
 
 

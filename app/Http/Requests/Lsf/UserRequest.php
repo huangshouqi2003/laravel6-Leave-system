@@ -36,13 +36,11 @@ class UserRequest extends FormRequest
     }
     public function messages(){
         return [
-
             'stu_id.required' => '学号不能为空',
             'stu_id.regex' => '学号格式应该整形',
             'stu_id.max' => '学号长度超出正常长度',
             'stu_id.min' => '学号长度低于正常长度',
             'stu_id.integer' => '学号应该是整形'
-
         ];
     }
 

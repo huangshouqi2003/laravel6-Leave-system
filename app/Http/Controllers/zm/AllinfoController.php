@@ -19,8 +19,8 @@ class AllinfoController extends Controller
         $res=stu_info::zmselect_user();
 
         return $res ?
-            json_success('操作成功!',$res,'200'):
-            json_fail('操作失败!',null,'100');
+            json_success('操作成功!',$res,200):
+            json_fail('操作失败!',null,100);
 
     }
 
@@ -29,11 +29,17 @@ class AllinfoController extends Controller
     {
         $token = $request->header('Authorization');
 
-        $request->headers->set('Authorization', $token);
+        if ($token == null)
+        {
+            return false;
+        }else{
 
-        $res= self::zm_refresh_token($token);
+            $request->headers->set('Authorization', $token);
 
-        return $res;
+            $res= self::zm_refresh_token($token);
+
+            return $res;
+        }
 
     }
 
@@ -106,6 +112,12 @@ class AllinfoController extends Controller
     {
 
         $key=self::zm_get_token($request);//获取token
+
+        if ($key == null)
+        {
+            return json_fail('token不存在',null,100);
+        }
+
         $key1=$key['one'];
         $key2=$key['two'];
         $key3=$key['three'];
@@ -117,7 +129,7 @@ class AllinfoController extends Controller
             $rules=[
                 'stu_id'=>'required|max:11',
                 'stu_name'=>'required|min:2',
-                'password'=>'required',
+//                'password'=>'required',
                 'email'=>'required',
                 'phone_num'=>'required|max:11',
                 'teacher'=>'required|min:2',
@@ -126,7 +138,7 @@ class AllinfoController extends Controller
             $message=[
                 'stu_id'=>'id',
                 'stu_name'=>'名字',
-                'password'=>'密码',
+//                'password'=>'密码',
                 'email'=>'邮箱',
                 'phone_num'=>'电话',
                 'teacher'=>'老师',
@@ -153,18 +165,18 @@ class AllinfoController extends Controller
                     $phone_num = $request['phone_num'];
                     $teacher = $request['teacher'];
 
-                    $res = student::zmtestchange($password, $stu_id);
+//                    $res = student::zmtestchange($password, $stu_id);
                     $res2 = stu_info::zmchange_user($stu_id, $stu_name, $stu_class, $email, $phone_num, $teacher);
 
-                    return ($res and $res2) ?
-                        json_success('修改成功!', $res, '200') :
-                        json_fail('修改失败!请检查是否有该学生或信息是否正常录入', null, '100');
+                    return $res2 ?
+                        json_success('修改成功!', $res2, 200) :
+                        json_fail('修改失败!请检查是否有该学生或信息是否正常录入', null, 100);
             }
         }
         else
         {
             $new=self::zm_flush_token($request['stu_id'],$request['stu_name']);
-            return json_fail('操作失败，验证失败',$new,'100');
+            return json_fail('操作失败，验证失败',$new,100);
         }
     }
 

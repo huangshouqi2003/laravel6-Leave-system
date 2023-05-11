@@ -3,6 +3,7 @@
 namespace App\Models\hsq;
 
 use Illuminate\Database\Eloquent\Model;
+use PHPUnit\Exception;
 
 class hsq_admin_login_cc extends Model
 {
@@ -21,13 +22,9 @@ class hsq_admin_login_cc extends Model
         {
             return 0;
         }
-        if($stu_id['stu_id']==null)//都为空返回500
+        if($stu_id==null)//都为空返回500
         {
             return 0;
-        }
-        else if($stu_id['identity'])
-        {
-            return response()->json(['data'=>$stu_id,'identity'=>'1'],200);
         }
         else if($stu_id['password']!=$request->input('password'))
         {
@@ -39,4 +36,22 @@ class hsq_admin_login_cc extends Model
         }
 
     }
+
+
+//    public static function hsq_login($request)
+//    {
+//        try {
+//            $res = self::where('stu_id',$request)->value('email');
+//
+//            if ($res == null){
+//                return $res;
+//
+//            }else{
+//                return 0 ;
+//            }
+//        }catch (\Exception $e){
+//            logError('操作失败',[$e->getMessage()]);
+//            return 0;
+//        }
+//    }
 }

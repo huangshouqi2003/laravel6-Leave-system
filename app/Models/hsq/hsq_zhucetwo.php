@@ -2,7 +2,9 @@
 
 namespace App\Models\hsq;
 
+use App\Http\Controllers\Lsf\StuController;
 use Illuminate\Database\Eloquent\Model;
+
 
 class hsq_zhucetwo extends Model
 {
@@ -13,7 +15,10 @@ class hsq_zhucetwo extends Model
     public static function hsq_insert_password($request)
     {
         try {
-            self::create(['stu_id'=>$request->input('stu_id'),'password'=>$request->input('password')]);
+
+            $stu_password = StuController::encryptString($request->input('password'));
+
+            self::create(['stu_id'=>$request->input('stu_id'),'password'=>$stu_password]);
         }
         catch (\Exception $e)
         {

@@ -24,6 +24,7 @@ class hsq_stu_info extends Model
         }
         return 1;
     }
+
     public static function dd1($request)
     {
         try {
@@ -34,5 +35,26 @@ class hsq_stu_info extends Model
             return 0;
         }
         return 1;
+    }
+
+    //通过学号查找姓名
+    public static function hsq_select_stu_name($stu_id)
+    {
+
+        try {
+
+            $res = self::where('stu_id',$stu_id)->value('stu_name');
+            if ($res!=null){
+                return $res;
+            }else{
+                return false;
+            }
+
+        }catch (\Exception $e){
+            logError('操作失败',[$e->getMessage()]);
+            return false;
+        }
+
+
     }
 }
